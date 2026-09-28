@@ -83,6 +83,15 @@ h1 {
   box-shadow: var(--shadow);
 }
 
+.melody-panel {
+  margin-bottom: 18px;
+  padding: clamp(20px, 4vw, 30px);
+  border: 2px solid #e8dcf4;
+  border-radius: 30px;
+  background: #fffdf8;
+  box-shadow: var(--shadow);
+}
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -93,6 +102,14 @@ h1 {
 .section-label {
   margin-bottom: 5px;
   color: #8b668f;
+}
+
+.melody-count {
+  color: var(--muted);
+  font-size: 0.58em;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 h2 {
@@ -116,6 +133,147 @@ h2 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.melody-hint {
+  margin: 14px 0 12px;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.melody-list {
+  display: flex;
+  min-height: 74px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 9px;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+}
+
+.melody-item {
+  display: inline-flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px 8px 9px;
+  border: 2px solid #e9e5ee;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+}
+
+.melody-item.is-current {
+  border-color: #253047;
+  box-shadow: 0 0 0 3px var(--note-color), 0 5px 14px rgb(37 48 71 / 15%);
+  transform: translateY(-2px);
+}
+
+.melody-order {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #f0edf4;
+  color: #4d5362;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+.melody-swatch {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(37 48 71 / 18%);
+  border-radius: 50%;
+  background: var(--note-color);
+}
+
+.melody-name {
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.melody-playing-label {
+  color: #253047;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.melody-empty {
+  margin: -58px 0 16px;
+  padding: 17px 0 12px;
+  color: #747b8b;
+  font-size: 0.94rem;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.melody-controls,
+.clear-confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.control-button {
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 2px solid #dcd6e4;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.97rem;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 130ms ease, box-shadow 130ms ease, background-color 130ms ease;
+}
+
+.control-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgb(37 48 71 / 12%);
+}
+
+.control-primary {
+  border-color: #6e4a87;
+  background: #744e8f;
+  color: #fff;
+}
+
+.control-danger {
+  border-color: #e1c4c7;
+  color: #803c49;
+}
+
+.control-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.control-button:focus-visible {
+  outline: 4px solid #253047;
+  outline-offset: 3px;
+}
+
+.clear-confirmation > span {
+  flex: 1 0 100%;
+  color: #4e4050;
+  font-weight: 800;
+}
+
+.clear-confirmation[hidden],
+[hidden] {
+  display: none !important;
 }
 
 .note-button {
@@ -173,7 +331,7 @@ h2 {
 
 .play-status {
   min-height: 27px;
-  margin: 17px 2px 15px;
+  margin: 16px 2px 0;
   color: #4c5670;
   font-size: 0.98rem;
   font-weight: 700;
@@ -224,15 +382,53 @@ h2 {
     border-radius: 24px;
   }
 
+  .melody-panel {
+    padding: 20px 16px;
+    border-radius: 24px;
+  }
+
   .note-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
   .note-button {
-    min-height: 112px;
-    padding: 13px 14px;
+    min-height: 104px;
+    padding: 12px 12px;
     border-radius: 18px;
+  }
+
+  .melody-controls,
+  .clear-confirmation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .control-button {
+    min-height: 52px;
+    padding: 10px 11px;
+    font-size: 0.9rem;
+  }
+
+  #replay-button {
+    grid-column: 1 / -1;
+  }
+
+  .clear-confirmation > span {
+    grid-column: 1 / -1;
+  }
+
+  .clear-confirmation > .control-button {
+    width: 100%;
+  }
+
+  .melody-item {
+    gap: 7px;
+    padding: 8px 10px 8px 8px;
+  }
+
+  .melody-playing-label {
+    font-size: 0.7rem;
   }
 
   .note-detail {

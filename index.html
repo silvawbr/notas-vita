@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#fff8e9">
-    <title>Explorar notas | Marina</title>
+    <title>Minha melodia | Marina</title>
     <link rel="stylesheet" href="styles.css">
     <script src="app.js" defer></script>
   </head>
@@ -12,30 +12,54 @@
     <main class="page-shell">
       <header class="intro">
         <p class="eyebrow">Flauta doce · digitação germânica</p>
-        <h1>Vamos explorar as notas?</h1>
-        <p class="lead">Toque em uma tecla para ouvir. Depois, experimente encontrar a mesma altura na sua flauta.</p>
+        <h1>Vamos inventar uma melodia?</h1>
+        <p class="lead">Toque nas notas para ouvi-las e criar uma sequência. Para ouvir a sequência completa, toque em Ouvir.</p>
       </header>
 
-      <section class="explorer" aria-labelledby="notes-heading">
+      <section class="melody-panel" aria-labelledby="melody-heading">
         <div class="section-heading">
           <div>
-            <p class="section-label">Modo exploratório</p>
-            <h2 id="notes-heading">Escolha uma nota</h2>
+            <p class="section-label">Sua criação</p>
+            <h2 id="melody-heading">Minha melodia <span id="melody-count" class="melody-count">(0 notas)</span></h2>
           </div>
           <span class="sound-mark" aria-hidden="true">♪</span>
         </div>
 
-        <div id="note-buttons" class="note-grid" aria-label="Notas para experimentar"></div>
-        <p id="play-status" class="play-status" role="status" aria-live="polite">Escolha qualquer nota para ouvir.</p>
+        <p id="melody-hint" class="melody-hint">As notas aparecem na ordem escolhida. Você pode repetir uma nota.</p>
+        <ol id="melody-list" class="melody-list" aria-describedby="melody-hint"></ol>
+        <p id="melody-empty" class="melody-empty">Sua melodia aparecerá aqui.</p>
+
+        <div class="melody-controls" aria-label="Controles da melodia">
+          <button id="replay-button" class="control-button control-primary" type="button" disabled>Ouvir</button>
+          <button id="undo-button" class="control-button" type="button" disabled>Desfazer última</button>
+          <button id="clear-button" class="control-button control-danger" type="button" disabled>Limpar melodia</button>
+          <div id="clear-confirmation" class="clear-confirmation" role="group" aria-label="Confirmar limpeza" hidden>
+            <span>Apagar todas as notas?</span>
+            <button id="confirm-clear-button" class="control-button control-danger" type="button">Apagar melodia</button>
+            <button id="cancel-clear-button" class="control-button" type="button">Manter melodia</button>
+          </div>
+        </div>
+        <p id="play-status" class="play-status" role="status" aria-live="polite">Escolha uma nota para começar sua melodia.</p>
+      </section>
+
+      <section class="explorer" aria-labelledby="notes-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Banco de notas</p>
+            <h2 id="notes-heading">Escolha uma nota</h2>
+          </div>
+        </div>
+
+        <div id="note-buttons" class="note-grid" aria-label="Notas para adicionar à melodia"></div>
 
         <aside class="example-note">
           <span class="example-icon" aria-hidden="true">✦</span>
-          <p>Estas são notas de exemplo para explorar. Elas não correspondem ao trecho de <em>Asa Branca</em> da aula.</p>
+          <p>Estas são notas de exemplo para brincar. A melodia criada aqui não é a partitura da aula de <em>Asa Branca</em>.</p>
         </aside>
       </section>
 
       <footer class="page-footer">
-        <p>O app toca um som eletrônico simples para ajudar a comparar a altura. O timbre é diferente do da flauta.</p>
+        <p>O app toca um som eletrônico simples; o timbre é diferente do da flauta. As notas têm duração e intervalo iguais.</p>
       </footer>
     </main>
   </body>
