@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#fff8e9">
+    <title>Explorar notas | Marina</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="intro">
+        <p class="eyebrow">Flauta doce · digitação germânica</p>
+        <h1>Vamos explorar as notas?</h1>
+        <p class="lead">Toque em uma tecla para ouvir. Depois, experimente encontrar a mesma altura na sua flauta.</p>
+      </header>
+
+      <section class="explorer" aria-labelledby="notes-heading">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">Modo exploratório</p>
+            <h2 id="notes-heading">Escolha uma nota</h2>
+          </div>
+          <span class="sound-mark" aria-hidden="true">♪</span>
+        </div>
+
+        <div id="note-buttons" class="note-grid" aria-label="Notas para experimentar"></div>
+        <p id="play-status" class="play-status" role="status" aria-live="polite">Escolha qualquer nota para ouvir.</p>
+
+        <aside class="example-note">
+          <span class="example-icon" aria-hidden="true">✦</span>
+          <p>Estas são notas de exemplo para explorar. Elas não correspondem ao trecho de <em>Asa Branca</em> da aula.</p>
+        </aside>
+      </section>
+
+      <footer class="page-footer">
+        <p>O app toca um som eletrônico simples para ajudar a comparar a altura. O timbre é diferente do da flauta.</p>
+      </footer>
+    </main>
+  </body>
+</html>

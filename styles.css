@@ -1,0 +1,250 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", Avenir, "Trebuchet MS", sans-serif;
+  color: #253047;
+  background: #fff8e9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #253047;
+  --muted: #657087;
+  --paper: #fffdf8;
+  --line: #efe7d8;
+  --shadow: 0 18px 52px rgb(80 62 32 / 9%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px 20px 32px;
+  background:
+    radial-gradient(ellipse at 6% 4%, rgb(255 222 161 / 44%), transparent 31rem),
+    radial-gradient(ellipse at 96% 21%, rgb(207 228 248 / 52%), transparent 28rem),
+    #fff8e9;
+}
+
+button {
+  font: inherit;
+}
+
+.page-shell {
+  width: min(100%, 850px);
+  margin: 0 auto;
+}
+
+.intro {
+  max-width: 700px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.eyebrow,
+.section-label {
+  margin: 0;
+  color: #88663d;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-size: clamp(2rem, 5vw, 3.3rem);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.lead {
+  max-width: 590px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.55;
+}
+
+.explorer {
+  padding: clamp(20px, 4vw, 34px);
+  border: 1px solid rgb(255 255 255 / 80%);
+  border-radius: 30px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.section-label {
+  margin-bottom: 5px;
+  color: #8b668f;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.3rem, 3vw, 1.7rem);
+  letter-spacing: -0.025em;
+}
+
+.sound-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 16px;
+  background: #f5ebff;
+  color: #8954a4;
+  font-size: 1.8rem;
+}
+
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.note-button {
+  display: flex;
+  min-width: 0;
+  min-height: 128px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px 20px;
+  border: 2px solid var(--note-color);
+  border-radius: 22px;
+  background: var(--note-color);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 130ms ease, box-shadow 130ms ease, background-color 130ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.note-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgb(37 48 71 / 12%);
+}
+
+.note-button:active,
+.note-button.is-playing {
+  transform: scale(0.97);
+  border-color: var(--note-color);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 65%);
+  filter: saturate(1.18) brightness(0.97);
+}
+
+.note-button:focus-visible {
+  outline: 4px solid #253047;
+  outline-offset: 3px;
+}
+
+.note-name {
+  display: block;
+  font-size: clamp(1.75rem, 4vw, 2.3rem);
+  font-weight: 850;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.note-detail {
+  display: block;
+  margin-top: 9px;
+  color: #4f596d;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.play-status {
+  min-height: 27px;
+  margin: 17px 2px 15px;
+  color: #4c5670;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.example-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f6f1ff;
+  color: #4b4564;
+}
+
+.example-note p,
+.page-footer p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.example-icon {
+  flex: 0 0 auto;
+  color: #8052ac;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.page-footer {
+  max-width: 650px;
+  margin: 18px auto 0;
+  color: #6c7180;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 27px 14px 22px;
+  }
+
+  .intro {
+    margin-bottom: 22px;
+  }
+
+  .explorer {
+    padding: 20px 16px;
+    border-radius: 24px;
+  }
+
+  .note-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .note-button {
+    min-height: 112px;
+    padding: 13px 14px;
+    border-radius: 18px;
+  }
+
+  .note-detail {
+    font-size: 0.83rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
