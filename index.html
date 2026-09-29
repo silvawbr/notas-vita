@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#fff8e9">
     <title>Minha melodia | Marina</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="recorder-fingerings.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -13,54 +14,129 @@
       <header class="intro">
         <p class="eyebrow">Flauta doce · digitação germânica</p>
         <h1>Vamos inventar uma melodia?</h1>
-        <p class="lead">Toque nas notas para ouvi-las e criar uma sequência. Para ouvir a sequência completa, toque em Ouvir.</p>
+        <p class="lead">Escolha notas para montar uma melodia ou toque cada uma no seu tempo e grave o ritmo.</p>
       </header>
 
-      <section class="melody-panel" aria-labelledby="melody-heading">
-        <div class="section-heading">
-          <div>
-            <p class="section-label">Sua criação</p>
-            <h2 id="melody-heading">Minha melodia <span id="melody-count" class="melody-count">(0 notas)</span></h2>
+      <nav class="mode-switch" aria-label="Modo de brincar">
+        <button id="choose-mode-button" class="mode-button is-selected" type="button" aria-pressed="true">Escolher notas</button>
+        <button id="record-mode-button" class="mode-button" type="button" aria-pressed="false">Tocar e gravar</button>
+      </nav>
+
+      <div class="studio-layout">
+        <section class="explorer" aria-labelledby="notes-heading">
+          <div class="section-heading">
+            <div>
+              <p class="section-label">Banco de notas</p>
+              <h2 id="notes-heading">Escolha uma nota</h2>
+            </div>
           </div>
-          <span class="sound-mark" aria-hidden="true">♪</span>
-        </div>
 
-        <p id="melody-hint" class="melody-hint">As notas aparecem na ordem escolhida. Você pode repetir uma nota.</p>
-        <ol id="melody-list" class="melody-list" aria-describedby="melody-hint"></ol>
-        <p id="melody-empty" class="melody-empty">Sua melodia aparecerá aqui.</p>
+          <div id="note-buttons" class="note-grid" aria-label="Notas para adicionar à melodia"></div>
 
-        <div class="melody-controls" aria-label="Controles da melodia">
-          <button id="replay-button" class="control-button control-primary" type="button" disabled>Ouvir</button>
-          <button id="undo-button" class="control-button" type="button" disabled>Desfazer última</button>
-          <button id="clear-button" class="control-button control-danger" type="button" disabled>Limpar melodia</button>
-          <div id="clear-confirmation" class="clear-confirmation" role="group" aria-label="Confirmar limpeza" hidden>
-            <span>Apagar todas as notas?</span>
-            <button id="confirm-clear-button" class="control-button control-danger" type="button">Apagar melodia</button>
-            <button id="cancel-clear-button" class="control-button" type="button">Manter melodia</button>
+          <aside class="example-note">
+            <span class="example-icon" aria-hidden="true">✦</span>
+            <p>Estas são notas de exemplo para brincar. A melodia criada aqui não é a partitura da aula de <em>Asa Branca</em>.</p>
+          </aside>
+        </section>
+
+        <section class="melody-panel" aria-labelledby="melody-heading">
+          <div class="section-heading">
+            <div>
+              <p class="section-label">Sua criação</p>
+              <h2 id="melody-heading">Minha melodia <span id="melody-count" class="melody-count">(0 notas)</span></h2>
+            </div>
+            <span class="sound-mark" aria-hidden="true">♪</span>
           </div>
-        </div>
-        <p id="play-status" class="play-status" role="status" aria-live="polite">Escolha uma nota para começar sua melodia.</p>
-      </section>
 
-      <section class="explorer" aria-labelledby="notes-heading">
-        <div class="section-heading">
-          <div>
-            <p class="section-label">Banco de notas</p>
-            <h2 id="notes-heading">Escolha uma nota</h2>
+          <p id="melody-hint" class="melody-hint">As notas aparecem na ordem escolhida. Você pode repetir uma nota.</p>
+          <ol id="melody-list" class="melody-list" aria-label="Sequência da melodia" aria-describedby="melody-hint" tabindex="-1"></ol>
+          <p id="melody-empty" class="melody-empty">Sua melodia aparecerá aqui.</p>
+
+          <div id="choose-controls" class="melody-controls" aria-label="Controles da sequência">
+            <button id="replay-button" class="control-button control-primary" type="button" disabled>Ouvir</button>
+            <button id="undo-button" class="control-button" type="button" disabled>Desfazer última</button>
+            <button id="clear-button" class="control-button control-danger" type="button" disabled>Limpar melodia</button>
+            <div id="clear-confirmation" class="clear-confirmation" role="group" aria-label="Confirmar limpeza" hidden>
+              <span>Apagar todas as notas?</span>
+              <button id="confirm-clear-button" class="control-button control-danger" type="button">Apagar melodia</button>
+              <button id="cancel-clear-button" class="control-button" type="button">Manter melodia</button>
+            </div>
           </div>
-        </div>
-
-        <div id="note-buttons" class="note-grid" aria-label="Notas para adicionar à melodia"></div>
-
-        <aside class="example-note">
-          <span class="example-icon" aria-hidden="true">✦</span>
-          <p>Estas são notas de exemplo para brincar. A melodia criada aqui não é a partitura da aula de <em>Asa Branca</em>.</p>
-        </aside>
-      </section>
+          <div id="record-controls" class="melody-controls" aria-label="Controles da gravação" hidden>
+            <button id="record-button" class="control-button control-primary" type="button">Gravar</button>
+            <button id="record-play-button" class="control-button" type="button" disabled>Ouvir minha música</button>
+            <button id="record-clear-button" class="control-button control-danger" type="button" disabled>Apagar gravação</button>
+            <div id="record-confirmation" class="clear-confirmation" role="group" aria-label="Confirmar alteração da gravação" hidden>
+              <span id="record-confirmation-message"></span>
+              <button id="confirm-record-action-button" class="control-button control-danger" type="button">Confirmar</button>
+              <button id="cancel-record-action-button" class="control-button" type="button">Manter gravação</button>
+            </div>
+          </div>
+          <p id="play-status" class="play-status" role="status" aria-live="polite">Escolha uma nota para começar sua melodia.</p>
+        </section>
+      </div>
 
       <footer class="page-footer">
-        <p>O app toca um som eletrônico simples; o timbre é diferente do da flauta. As notas têm duração e intervalo iguais.</p>
+        <p id="sound-hint">O app toca um som eletrônico simples; o timbre é diferente do da flauta.</p>
       </footer>
     </main>
+
+    <dialog id="playback-overlay" class="playback-overlay" aria-labelledby="playback-heading">
+      <div class="playback-dialog">
+        <header class="playback-header">
+          <div>
+            <p class="section-label">Acompanhe com a flauta</p>
+            <h2 id="playback-heading">Ouvir minha música</h2>
+          </div>
+          <button id="playback-close-icon" class="playback-close-icon" type="button" aria-label="Fechar acompanhamento">×</button>
+        </header>
+
+        <section class="playback-sequence-area" aria-label="Progresso da sequência">
+          <p id="playback-progress-label" class="playback-progress-label" role="status" aria-live="polite">Preparando a gravação…</p>
+          <ol id="playback-sequence" class="playback-sequence"></ol>
+        </section>
+
+        <div class="playback-stage">
+          <section class="playback-current-note" aria-labelledby="playback-note-name">
+            <p class="section-label">Nota atual</p>
+            <h3 id="playback-note-name">Preparando…</h3>
+            <p id="playback-note-hint" class="playback-note-hint">A sequência vai começar.</p>
+          </section>
+
+          <figure id="recorder-figure" class="recorder-figure" hidden>
+            <h3>Dedilhado · flauta germânica</h3>
+            <p class="hole-placement"><strong>0</strong> fica atrás, no polegar esquerdo. Na frente: furos 1–3 para a mão esquerda e 4–7 para a direita.</p>
+            <div id="fingering-dots" class="fingering-dots" role="img" aria-label="Posição dos furos da flauta doce germânica">
+              <div class="fingering-row fingering-pair">
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">0</span><span class="fingering-hole" data-hole="0"></span></div>
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">1</span><span class="fingering-hole" data-hole="1"></span></div>
+              </div>
+              <div class="fingering-column">
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">2</span><span class="fingering-hole" data-hole="2"></span></div>
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">3</span><span class="fingering-hole" data-hole="3"></span></div>
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">4</span><span class="fingering-hole" data-hole="4"></span></div>
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">5</span><span class="fingering-hole" data-hole="5"></span></div>
+              </div>
+              <div class="fingering-row fingering-pair">
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">6</span><span class="fingering-hole" data-hole="6"></span></div>
+                <div class="fingering-hole-cell"><span class="fingering-hole-number">7</span><span class="fingering-hole" data-hole="7"></span></div>
+              </div>
+            </div>
+            <ul class="fingering-legend" aria-label="Legenda dos furos">
+              <li><span class="fingering-legend-dot is-closed" aria-hidden="true"></span>Fechado</li>
+              <li><span class="fingering-legend-dot is-open" aria-hidden="true"></span>Aberto</li>
+              <li><span class="fingering-legend-dot is-quarter-open" aria-hidden="true"></span>¼ aberto</li>
+            </ul>
+            <figcaption id="fingering-description" class="fingering-description"></figcaption>
+          </figure>
+        </div>
+
+        <footer class="playback-controls" aria-label="Controles da reprodução">
+          <button id="playback-pause-button" class="control-button control-primary" type="button">Pausar</button>
+          <button id="playback-replay-button" class="control-button" type="button">Ouvir de novo</button>
+          <button id="playback-close-button" class="control-button" type="button">Fechar</button>
+        </footer>
+      </div>
+    </dialog>
   </body>
 </html>
