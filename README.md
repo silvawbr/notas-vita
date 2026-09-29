@@ -10,7 +10,15 @@ No computador, abra `index.html` em um navegador moderno ou execute nesta pasta:
 ./serve.sh
 ```
 
-O script serve por padrão em `http://127.0.0.1:8000`, acessível apenas neste computador. Para testar em um celular conectado à mesma rede Wi-Fi, execute `./serve.sh --network` e abra `http://IP-DO-COMPUTADOR:8000` (substitua pelo IP local do computador). Essa opção expõe o servidor à rede local; o firewall pode pedir autorização. Defina `PORT=8080` antes do comando para escolher outra porta. O servidor da biblioteca padrão do Python serve apenas para desenvolvimento; não use como hospedagem de produção. Não há etapa de build, gerenciador de pacotes, dependências ou lockfile.
+O script serve por padrão em `http://127.0.0.1:8000`, acessível apenas neste computador. Para testar em um celular conectado à mesma rede Wi-Fi, execute `./serve.sh --network` e abra `http://IP-DO-COMPUTADOR:8000` (substitua pelo IP local do computador). Essa opção expõe o servidor à rede local; o firewall pode pedir autorização. Defina `PORT=8080` antes do comando para escolher outra porta. O servidor da biblioteca padrão do Python serve apenas para desenvolvimento; não use como hospedagem de produção.
+
+O app não usa framework, dependências npm nem serviços externos. Para gerar os arquivos estáticos de produção em `dist/`, execute `npm run build`; o script copia somente `index.html`, `app.js` e `styles.css`. Não há lockfile porque o projeto não instala pacotes.
+
+## Publicar na Vercel
+
+O repositório do app é [`silvawbr/notas-vita`](https://github.com/silvawbr/notas-vita). Importe esse repositório em um projeto Vercel próprio, com a raiz no diretório principal do repositório. O arquivo `vercel.json` define o preset **Other**, pula a instalação de pacotes, executa `npm run build` e publica `dist/`. `package.json` define Node.js `24.x`, usado somente durante o build; o app publicado é estático e não cria funções serverless nem precisa de variáveis de ambiente.
+
+Configure `main` como a branch de Production; pushes nessa branch atualizam o deployment de Production automaticamente. As outras branches ficam como Preview. Um nome adequado para o projeto é `notas-vita`; a disponibilidade desse nome no namespace Vercel deve ser conferida durante a criação.
 
 ## Brincar com a sequência
 
@@ -49,15 +57,15 @@ As frequências usam afinação temperada com Lá 4 = 440 Hz. O som é uma senoi
 
 Verificação das versões instaladas e da documentação oficial em 28/09/2026:
 
-- O app continua em HTML, CSS e JavaScript sem framework nem dependências. Não há `package.json` nem lockfile.
+- O app continua em HTML, CSS e JavaScript sem framework nem bibliotecas externas. `package.json` contém somente o script de build e a versão de Node; não há lockfile.
 - Google Chrome `154.0.8037.58` (macOS), versão instalada confirmada; a série Chrome 154 chegou ao canal estável para desktop em 22/09/2026 ([anúncio oficial](https://chromereleases.googleblog.com/2026/09/stable-channel-update-for-desktop_0856730748.html)).
-- Node.js `v24.14.0` e npm `11.9.0` estão instalados, mas o app não os usa. A linha Node.js 24 consta como LTS e a versão v24.21.0 foi publicada em 07/09/2026 ([status das versões](https://nodejs.org/en/about/previous-releases), [v24.21.0](https://nodejs.org/en/blog/release/v24.21.0)); não atualizei o ambiente porque nenhuma dependência Node é necessária.
+- Node.js local `v24.14.0` e npm `11.9.0`; Node é usado apenas para o build. Vercel oferece Node.js `24.x` e aceita fixar a versão principal com `engines.node` ([versões Node.js na Vercel](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)). O app publicado não usa runtime Node nem funções.
 - Python `3.14.2` está instalado e é usado apenas para servir os arquivos localmente. Python `3.14.7` é a manutenção estável mais recente da série na data consultada ([versões publicadas](https://www.python.org/doc/versions/), [Python 3.14.7](https://www.python.org/downloads/release/python-3147/)). Não atualizei a instalação do ambiente para este app; não há bibliotecas Python externas.
 - O áudio usa `AudioContext`, osciladores e envelopes da Web Audio API. A MDN classifica `AudioContext` e `resume()` como amplamente disponíveis; recomenda criar ou retomar o contexto em resposta a uma interação, conforme as políticas de reprodução automática dos navegadores ([AudioContext](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext), [resume()](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume), [boas práticas de Web Audio](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Best_practices), [guia de reprodução automática](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Autoplay)). O app mantém um único contexto: tocar numa nota ou acionar **Ouvir** inicia áudio após a interação.
 - O servidor de desenvolvimento segue a interface oficial `python -m http.server` ([documentação do Python](https://docs.python.org/3/library/http.server.html)); não faz parte do app em produção.
 
 ## Validação do Block 2
 
-- `node --check app.js`: passou.
-- `sh -n serve.sh`: passou.
-- Teste no navegador e viewport móvel: pendente de um URL `http(s)` de preview. O navegador disponível recusou abrir o arquivo `file://` por política de segurança; a política também impede contornar isso servindo o mesmo arquivo localmente ou usando outra superfície de navegador. Chrome em dispositivo físico, Safari/iOS e Android não foram testados.
+- `npm run build`: passou; `dist/` contém somente `index.html`, `app.js` e `styles.css`.
+- `node --check app.js`, `node --check scripts/build.js` e `sh -n serve.sh`: passaram.
+- O smoke test no navegador depende de um deployment Vercel, ainda não configurado. O sandbox bloqueou a abertura do servidor HTTP local na interface de loopback. Testes de toque e áudio em aparelhos físicos (Safari no iPhone e Chrome no Android) continuam pendentes.
