@@ -38,16 +38,16 @@ const playbackPauseButton = document.querySelector("#playback-pause-button");
 const playbackReplayButton = document.querySelector("#playback-replay-button");
 const playbackProgressLabel = document.querySelector("#playback-progress-label");
 const playbackSequence = document.querySelector("#playback-sequence");
+const playbackNoteLabel = document.querySelector("#playback-note-label");
 const playbackNoteName = document.querySelector("#playback-note-name");
 const playbackNoteHint = document.querySelector("#playback-note-hint");
 const playbackStage = document.querySelector(".playback-stage");
 const recorderFigure = document.querySelector("#recorder-figure");
 const fingeringDots = document.querySelector("#fingering-dots");
-const fingeringDescription = document.querySelector("#fingering-description");
-const frequencyFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
 const durationFormatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 });
 const NOTE_INTERVAL_MS = 430;
 const NOTE_DURATION_SECONDS = 0.32;
+const PLAYBACK_SEQUENCE_WINDOW_SIZE = 5;
 const KEYBOARD_NOTES = new Map(notes.map((note) => [note.keyboardCode, note]));
 
 let audioContext;
@@ -66,6 +66,10 @@ function formatDuration(durationMs) {
   return `${durationFormatter.format(durationMs / 1000)} s`;
 }
 
+function displayNoteName(note) {
+  return note.name.replace(/\s+\d+$/u, "");
+}
+
 function createNoteButton(note) {
   const button = document.createElement("button");
   button.type = "button";
@@ -75,17 +79,13 @@ function createNoteButton(note) {
 
   const name = document.createElement("span");
   name.className = "note-name";
-  name.textContent = note.name;
-
-  const detail = document.createElement("span");
-  detail.className = "note-detail";
-  detail.textContent = `${frequencyFormatter.format(note.frequencyHz)} Hz`;
+  name.textContent = displayNoteName(note);
 
   const keyHint = document.createElement("span");
   keyHint.className = "note-key-hint";
   keyHint.setAttribute("aria-hidden", "true");
   keyHint.textContent = `Tecla ${note.keyboardLabel}`;
-  button.append(name, detail, keyHint);
+  button.append(name, keyHint);
 
   button.addEventListener("click", (event) => {
     if (mode === "choose") {
@@ -169,8 +169,8 @@ function renderMelody(currentIndex = -1) {
     noteButton.setAttribute(
       "aria-label",
       isRecordingMode
-        ? `Tocar ${note.name}, ${frequencyFormatter.format(note.frequencyHz)} Hz. Solte para terminar. Tecla ${note.keyboardLabel}.`
-        : `Adicionar ${note.name}, ${frequencyFormatter.format(note.frequencyHz)} Hz à melodia e ouvir a nota.`,
+        ? `Tocar ${displayNoteName(note)}. Solte para terminar. Tecla ${note.keyboardLabel}.`
+        : `Adicionar ${displayNoteName(note)} à melodia e ouvir a nota.`,
     );
   }
   soundHint.textContent = isRecordingMode
@@ -207,7 +207,7 @@ function renderMelody(currentIndex = -1) {
 
     const name = document.createElement("span");
     name.className = "melody-name";
-    name.textContent = entry.note.name;
+    name.textContent = displayNoteName(entry.note);
     item.append(order, swatch, name);
 
     if (isRecordingMode) {
@@ -223,10 +223,10 @@ function renderMelody(currentIndex = -1) {
       item.append(durationMark, duration);
       item.setAttribute(
         "aria-label",
-        `Nota ${index + 1}: ${entry.note.name}, duração ${formatDuration(entry.durationMs)}${index > 0 ? `, pausa anterior ${formatDuration(silenceMs)}` : ""}`,
+        `Nota ${index + 1}: ${displayNoteName(entry.note)}, duração ${formatDuration(entry.durationMs)}${index > 0 ? `, pausa anterior ${formatDuration(silenceMs)}` : ""}`,
       );
     } else {
-      item.setAttribute("aria-label", `Nota ${index + 1}: ${entry.note.name}`);
+      item.setAttribute("aria-label", `Nota ${index + 1}: ${displayNoteName(entry.note)}`);
     }
 
     if (index === currentIndex) {
@@ -255,13 +255,22 @@ function renderMelody(currentIndex = -1) {
   melodyList.tabIndex = melodyList.scrollWidth > melodyList.clientWidth ? 0 : -1;
 }
 
-function buildPlaybackSequence(sequence) {
+function buildPlaybackSequence(sequence, windowStart) {
   playbackSequence.replaceChildren();
-  sequence.forEach((event, index) => {
+  const visibleCount = Math.min(PLAYBACK_SEQUENCE_WINDOW_SIZE, sequence.length);
+  const lastWindowStart = Math.max(0, sequence.length - visibleCount);
+  const startIndex = Math.max(0, Math.min(windowStart, lastWindowStart));
+  playbackSequence.dataset.windowStart = String(startIndex);
+
+  sequence.slice(startIndex, startIndex + visibleCount).forEach((event, offset) => {
+    const index = startIndex + offset;
     const item = document.createElement("li");
     item.className = "playback-sequence-item";
     item.dataset.eventIndex = String(index);
-    item.setAttribute("aria-label", `Evento ${index + 1}: ${event.note.name}`);
+    item.setAttribute(
+      "aria-label",
+      `Evento ${index + 1}: ${displayNoteName(event.note)}. Dedilhado visual exibido.`,
+    );
 
     const number = document.createElement("span");
     number.className = "playback-sequence-number";
@@ -269,10 +278,42 @@ function buildPlaybackSequence(sequence) {
     number.textContent = String(index + 1);
 
     const name = document.createElement("span");
-    name.textContent = event.note.name;
+    name.className = "playback-sequence-name";
+    name.textContent = displayNoteName(event.note);
+
     item.append(number, name);
+    const config = getFingeringConfig(event.note);
+    const holes = getFingeringHoleNumbers();
+    if (config && holes.length > 0) {
+      const diagram = document.createElement("span");
+      diagram.className = "playback-sequence-fingering";
+      diagram.setAttribute("aria-hidden", "true");
+      for (const holeNumber of holes) {
+        const hole = document.createElement("span");
+        const state = fingeringState(config, holeNumber);
+        hole.className = `playback-sequence-hole is-${state}`;
+        hole.dataset.hole = String(holeNumber);
+        diagram.append(hole);
+      }
+      item.append(diagram);
+    }
+
     playbackSequence.append(item);
   });
+}
+
+function getFingeringConfig(note) {
+  const fingerings = window.RECORDER_FINGERINGS;
+  // Tolerate the earlier chart format where note names were top-level keys.
+  const config = fingerings?.notes?.[note.name] ?? fingerings?.[note.name];
+  if (!config || !Array.isArray(config.closed) || !Array.isArray(config.quarterOpen)) return null;
+  return config;
+}
+
+function getFingeringHoleNumbers() {
+  const configuredHoles = window.RECORDER_FINGERINGS?.holes;
+  if (Array.isArray(configuredHoles) && configuredHoles.length > 0) return configuredHoles;
+  return Array.from(fingeringDots.querySelectorAll("[data-hole]"), (hole) => Number(hole.dataset.hole));
 }
 
 function fingeringState(config, holeNumber) {
@@ -282,18 +323,11 @@ function fingeringState(config, holeNumber) {
 }
 
 function renderFingering(note) {
-  const config = window.RECORDER_FINGERINGS[note.name];
+  const config = getFingeringConfig(note);
   if (!config) {
     recorderFigure.hidden = true;
     return false;
   }
-
-  const holeNames = Array.from({ length: 8 }, (_, holeNumber) => {
-    const state = fingeringState(config, holeNumber);
-    const location = holeNumber === 0 ? "traseiro, polegar esquerdo" : "frontal";
-    const label = state === "quarter-open" ? "1/4 aberto" : state === "closed" ? "fechado" : "aberto";
-    return `furo ${holeNumber} (${location}) ${label}`;
-  });
 
   for (const hole of fingeringDots.querySelectorAll("[data-hole]")) {
     const state = fingeringState(config, Number(hole.dataset.hole));
@@ -301,8 +335,7 @@ function renderFingering(note) {
     hole.classList.add(`is-${state}`);
   }
 
-  fingeringDots.setAttribute("aria-label", `${note.name}: ${holeNames.join("; ")}.`);
-  fingeringDescription.textContent = holeNames.join(" · ");
+  fingeringDots.setAttribute("aria-label", `${displayNoteName(note)}: furos fechados marcados no diagrama.`);
   recorderFigure.hidden = false;
   return true;
 }
@@ -313,10 +346,21 @@ function hideFingering() {
 }
 
 function updatePlaybackSequence(playback, elapsedMs, activeIndex, completedCount, nextIndex, finished) {
+  const focusIndex = activeIndex >= 0 ? activeIndex : nextIndex >= 0 ? nextIndex : playback.sequence.length - 1;
+  const visibleCount = Math.min(PLAYBACK_SEQUENCE_WINDOW_SIZE, playback.sequence.length);
+  const lastWindowStart = Math.max(0, playback.sequence.length - visibleCount);
+  const windowStart = Math.max(0, Math.min(focusIndex - 2, lastWindowStart));
+  if (playbackSequence.dataset.windowStart !== String(windowStart)) {
+    buildPlaybackSequence(playback.sequence, windowStart);
+  }
+
   for (const item of playbackSequence.children) {
     const index = Number(item.dataset.eventIndex);
-    const isCurrent = !finished && index === activeIndex;
-    const isComplete = finished || playback.sequence[index].startMs + playback.sequence[index].durationMs <= elapsedMs;
+    const event = playback.sequence[index];
+    const isCurrent = finished
+      ? index === playback.sequence.length - 1
+      : index === activeIndex;
+    const isComplete = !isCurrent && (finished || event.startMs + event.durationMs <= elapsedMs);
     const isUpNext = !finished && activeIndex < 0 && index === nextIndex;
     item.classList.toggle("is-current", isCurrent);
     item.classList.toggle("is-complete", isComplete);
@@ -329,7 +373,7 @@ function updatePlaybackSequence(playback, elapsedMs, activeIndex, completedCount
   }
 
   if (finished) {
-    playbackProgressLabel.textContent = `Sequência concluída · ${playback.sequence.length} eventos`;
+    playbackProgressLabel.textContent = `Fim da sequência · ${playback.sequence.length} eventos`;
   } else if (activeIndex >= 0) {
     playbackProgressLabel.textContent = `Nota ${activeIndex + 1} de ${playback.sequence.length}`;
   } else if (elapsedMs < 0) {
@@ -373,24 +417,28 @@ function renderRecordingPlayback(playback) {
 
   if (activeIndex >= 0) {
     const event = playback.sequence[activeIndex];
-    playbackNoteName.textContent = event.note.name;
+    playbackNoteLabel.textContent = "Nota atual";
+    playbackNoteName.textContent = displayNoteName(event.note);
     playbackNoteHint.textContent = playback.isPaused
-      ? "Reprodução pausada nesta nota. Toque em Continuar para retomar."
-      : "Acompanhe esta posição dos dedos enquanto a nota soa.";
+      ? "Pausada nesta nota. Toque em Continuar."
+      : "Acompanhe os dedos enquanto a nota soa.";
     playbackStage.classList.toggle("has-fingering", renderFingering(event.note));
     playStatus.textContent = playback.isPaused
       ? `Reprodução pausada na nota ${activeIndex + 1} de ${playback.sequence.length}.`
-      : `Tocando nota ${activeIndex + 1} de ${playback.sequence.length}: ${event.note.name}.`;
+      : `Tocando nota ${activeIndex + 1} de ${playback.sequence.length}: ${displayNoteName(event.note)}.`;
   } else if (elapsedMs < 0) {
-    playbackNoteName.textContent = "Preparando…";
-    playbackNoteHint.textContent = "A sequência vai começar.";
-    hideFingering();
+    const nextEvent = playback.sequence[nextIndex];
+    playbackNoteLabel.textContent = "Próxima nota";
+    playbackNoteName.textContent = displayNoteName(nextEvent.note);
+    playbackNoteHint.textContent = "Prepare esta posição. A música vai começar já.";
+    playbackStage.classList.toggle("has-fingering", renderFingering(nextEvent.note));
     playStatus.textContent = "Preparando sua música…";
   } else if (nextIndex >= 0) {
     const nextEvent = playback.sequence[nextIndex];
-    playbackNoteName.textContent = "Pausa";
-    playbackNoteHint.textContent = `Silêncio gravado. Prepare ${nextEvent.note.name} para a próxima nota.`;
-    hideFingering();
+    playbackNoteLabel.textContent = "Próxima nota";
+    playbackNoteName.textContent = displayNoteName(nextEvent.note);
+    playbackNoteHint.textContent = "Pausa gravada · prepare os dedos.";
+    playbackStage.classList.toggle("has-fingering", renderFingering(nextEvent.note));
     playStatus.textContent = `Pausa antes da nota ${nextIndex + 1} de ${playback.sequence.length}.`;
   }
 
@@ -403,9 +451,11 @@ function finishRecordingPlayback(playback, elapsedMs) {
   playback.finished = true;
   playback.timer = null;
   recordingWasPlayed = true;
-  playbackNoteName.textContent = "Concluída";
-  playbackNoteHint.textContent = "Você pode ouvir de novo ou fechar o acompanhamento.";
-  hideFingering();
+  const lastEvent = playback.sequence.at(-1);
+  playbackNoteLabel.textContent = "Última nota";
+  playbackNoteName.textContent = displayNoteName(lastEvent.note);
+  playbackNoteHint.textContent = "Fim da música · ouça de novo.";
+  playbackStage.classList.toggle("has-fingering", renderFingering(lastEvent.note));
   playbackPauseButton.textContent = "Pausar";
   playbackPauseButton.disabled = true;
   updatePlaybackSequence(playback, elapsedMs, -1, playback.sequence.length, -1, true);
@@ -529,7 +579,7 @@ async function previewNote(note, button) {
   const playback = { voices: new Set(), timer: null, resolveWait: null, button };
   activePlayback = playback;
   button.classList.add("is-playing");
-  playStatus.textContent = `Tocando ${note.name}.`;
+  playStatus.textContent = `Tocando ${displayNoteName(note)}.`;
 
   try {
     const context = getAudioContext();
@@ -544,7 +594,7 @@ async function previewNote(note, button) {
     if (activePlayback !== playback) return;
     activePlayback = null;
     button.classList.remove("is-playing");
-    playStatus.textContent = `${note.name} adicionada e tocada. Toque em Ouvir para escutar a melodia.`;
+    playStatus.textContent = `${displayNoteName(note)} adicionada e tocada. Toque em Ouvir para escutar a melodia.`;
   } catch {
     if (activePlayback !== playback) return;
     stopPlayback();
@@ -573,7 +623,7 @@ async function startPlayback() {
 
       const note = sequence[index];
       renderMelody(index);
-      playStatus.textContent = `Tocando nota ${index + 1} de ${sequence.length}: ${note.name}.`;
+      playStatus.textContent = `Tocando nota ${index + 1} de ${sequence.length}: ${displayNoteName(note)}.`;
       playNote(playback, note);
       await waitForNextNote(playback);
     }
@@ -639,7 +689,7 @@ function beginNote(note, input) {
   };
   activeInput = pressed;
   pressed.button.classList.add("is-playing");
-  playStatus.textContent = `Tocando ${note.name}. Solte para terminar a nota.`;
+  playStatus.textContent = `Tocando ${displayNoteName(note)}. Solte para terminar a nota.`;
   void startHeldVoice(pressed);
 }
 
@@ -709,7 +759,7 @@ function finishActiveNote() {
     durationMs,
   });
   renderMelody();
-  playStatus.textContent = `${pressed.note.name} gravada por ${formatDuration(durationMs)}.`;
+  playStatus.textContent = `${displayNoteName(pressed.note)} gravada por ${formatDuration(durationMs)}.`;
 }
 
 function finishInput(type, id) {
@@ -790,6 +840,33 @@ function cancelRecordAction() {
   playStatus.textContent = "Gravação mantida.";
 }
 
+function normalizeRecordingPlaybackTiming(events) {
+  let previousRecordedEvent = null;
+  let previousPlaybackEvent = null;
+
+  return events.map((event) => {
+    const durationMs = Math.max(event.durationMs, NOTE_DURATION_SECONDS * 1000);
+    let startMs = event.startMs;
+
+    if (previousRecordedEvent && previousPlaybackEvent) {
+      const recordedSilenceMs = Math.max(
+        0,
+        event.startMs - previousRecordedEvent.startMs - previousRecordedEvent.durationMs,
+      );
+      const defaultNextStartMs = previousPlaybackEvent.startMs + NOTE_INTERVAL_MS;
+      const startAfterRecordedSilenceMs = previousPlaybackEvent.startMs
+        + previousPlaybackEvent.durationMs
+        + recordedSilenceMs;
+      startMs = Math.max(startMs, defaultNextStartMs, startAfterRecordedSilenceMs);
+    }
+
+    const playbackEvent = { ...event, startMs, durationMs };
+    previousRecordedEvent = event;
+    previousPlaybackEvent = playbackEvent;
+    return playbackEvent;
+  });
+}
+
 function scheduleRecordedNote(playback, event, startAt) {
   const context = getAudioContext();
   const durationSeconds = event.durationMs / 1000;
@@ -839,7 +916,7 @@ async function playRecording() {
   stopPlayback({ keepRecordingOverlay: true });
   if (recordedEvents.length === 0 || recordingActive) return;
 
-  const sequence = recordedEvents.map((event) => ({ ...event }));
+  const sequence = normalizeRecordingPlaybackTiming(recordedEvents);
   const playback = {
     kind: "recording",
     voices: new Set(),
@@ -853,13 +930,14 @@ async function playRecording() {
     totalDurationMs: 0,
   };
   activePlayback = playback;
-  buildPlaybackSequence(sequence);
-  playbackNoteName.textContent = "Preparando…";
-  playbackNoteHint.textContent = "A sequência vai começar.";
+  buildPlaybackSequence(sequence, 0);
+  playbackNoteLabel.textContent = "Próxima nota";
+  playbackNoteName.textContent = displayNoteName(sequence[0].note);
+  playbackNoteHint.textContent = "Prepare esta posição. A música vai começar já.";
+  playbackStage.classList.toggle("has-fingering", renderFingering(sequence[0].note));
   playbackProgressLabel.textContent = `Preparando · ${sequence.length} eventos`;
   playbackPauseButton.textContent = "Pausar";
   playbackPauseButton.disabled = true;
-  hideFingering();
   if (!playbackOverlay.open) playbackOverlay.showModal();
   playStatus.textContent = "Preparando sua música…";
 
@@ -886,6 +964,7 @@ async function playRecording() {
   } catch {
     if (activePlayback !== playback) return;
     stopPlayback({ keepRecordingOverlay: true });
+    playbackNoteLabel.textContent = "Próxima nota";
     playbackNoteName.textContent = "Não foi possível tocar";
     playbackNoteHint.textContent = "Confira o volume e tente ouvir a gravação de novo.";
     playbackProgressLabel.textContent = "Reprodução não iniciada";
@@ -1005,7 +1084,9 @@ playbackOverlay.addEventListener("close", () => {
     stopPlayback({ keepRecordingOverlay: true });
   }
   playbackSequence.replaceChildren();
+  delete playbackSequence.dataset.windowStart;
   playbackProgressLabel.textContent = "Reprodução encerrada.";
+  playbackNoteLabel.textContent = "Próxima nota";
   playbackNoteName.textContent = "Preparando…";
   playbackNoteHint.textContent = "A sequência vai começar.";
   playbackPauseButton.textContent = "Pausar";

@@ -36,14 +36,14 @@ Um novo toque numa nota durante a reprodução interrompe a sequência, toca a n
 - A gravação começa no primeiro toque. Cada evento guarda a nota, o instante de início e a duração medidos com `performance.now()`. O início de cada nota também preserva o silêncio desde o fim da anterior.
 - Pressionar outra nota encerra a anterior e inicia a nova. Há uma nota ativa por vez; repetir a mesma nota cria outro evento.
 - Soltar fora do botão, cancelar o ponteiro, perder o foco da janela ou ocultar a página encerra a nota. Perder foco também encerra a gravação. Repetição automática de tecla não cria eventos extras.
-- **Ouvir minha música** reproduz os instantes e as durações gravados, inclusive as pausas. Depois da primeira execução, o botão passa a **Ouvir novamente**. A nota em reprodução fica destacada; cada nota mostra sua duração e as pausas aparecem antes da nota seguinte.
+- **Ouvir minha música** preserva as pausas e as durações longas. Notas mais curtas que o padrão do Block 2 tocam por pelo menos 320 ms, e os inícios ficam separados por pelo menos 430 ms. Depois da primeira execução, o botão passa a **Ouvir novamente**. A nota em reprodução fica destacada; cada nota mostra sua duração e as pausas aparecem antes da nota seguinte.
 - **Gravar outra vez** pede confirmação antes de substituir uma gravação. **Apagar gravação** também pede confirmação; cancelar mantém a gravação.
 - Não há limite artificial de duração de nota.
 
 ## Block 2.2 — Ver as notas durante a reprodução
 
 - **Ouvir minha música** abre o acompanhamento e inicia a gravação. O nome da nota, o dedilhado e o evento destacado avançam no tempo gravado; durante um silêncio, a tela mostra a pausa e a próxima nota.
-- A lista numerada mantém cada toque como um evento próprio, mesmo quando duas notas seguidas têm o mesmo nome. As posições usam os tempos e as durações originais da gravação.
+- A lista numerada mantém cada toque como um evento próprio, mesmo quando duas notas seguidas têm o mesmo nome. O acompanhamento segue os tempos de reprodução, com o piso de 320 ms por nota e 430 ms entre inícios; durações longas e pausas gravadas são preservadas.
 - **Pausar** congela o áudio e o acompanhamento; **Continuar** retoma do mesmo ponto. **Ouvir de novo** reinicia a sequência e **Fechar** encerra o som e remove o destaque.
 - O diagrama usa círculos preenchidos para furos fechados, contornos para abertos e um círculo parcialmente preenchido para o furo aberto em 1/4. O furo traseiro 0 é do polegar esquerdo; os furos 1–7 ficam na frente. O padrão visual segue os círculos da atividade, com os estados de Sol 5, Lá 5, Si 5, Dó 6 e Ré 6 conferidos na [tabela oficial Yamaha para flauta doce soprano germânica](https://www.yamaha.com/en/musical_instrument_guide/recorder/play/play002.html) e no [quadro de dedilhado Yamaha](https://www.yamaha.com/en/musical_instrument_guide/common/images/recorder/fingering_german.pdf).
 - A associação reutilizável fica em `recorder-fingerings.js`; o build copia essa configuração junto dos arquivos estáticos.
